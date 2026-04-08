@@ -1,58 +1,43 @@
 # @itiana/dashboard-kit
 
-Real-time dashboard component library for React. Drop-in BentoGrid with drag-and-drop, live KPI cards, streaming charts via SSE, and a dark/light theme system – all in one package with zero required configuration.
+Real-time dashboard component library for React. Provides a drag-and-drop BentoGrid, KPI cards with trend indicators, streaming charts via SSE, a dark/light theme system, and CSV/JSON export — with zero required configuration.
 
-## Use Cases
+## What Problem It Solves
 
-- **Ops dashboards** – connect a single SSE endpoint and render live metrics without writing any streaming logic
-- **Analytics UIs** – compose KPI cards and recharts-based line/bar/area charts inside a freely rearrangeable grid
-- **Monitoring panels** – threshold-aware status colors, progress-to-target bars, and trend arrows out of the box
-- **Data exports** – one hook call to download displayed data as CSV or JSON
+Building a production real-time dashboard involves wiring together a streaming data layer (SSE reconnect logic, parse errors, backoff), a layout system (drag, resize, responsive columns), live charts that trim old points, and a consistent theme. This library packages all of that as typed, composable primitives so you can focus on your data rather than plumbing.
 
-## Architecture
+## Features
 
-```mermaid
-graph TD
-    App["Consumer App"]
-    TP["ThemeProvider\n(dark / light / system)"]
-    BG["BentoGrid\n(react-grid-layout)"]
-    KPI["KpiCard"]
-    RTC["RealTimeChart\n(recharts)"]
-    URTD["useRealTimeData\n(SSE hook)"]
-    UE["useExport\n(CSV / JSON)"]
-    Types["types/index.ts\n(shared contracts)"]
+- **BentoGrid** — draggable, resizable widget grid backed by react-grid-layout
+- **KpiCard** — metric display with trend arrows, target progress bar, status color, and loading skeleton
+- **RealTimeChart** — line / area / bar chart (recharts) with auto-trimming ring buffer and configurable mode
+- **ThemeProvider** — dark / light / system theme with `localStorage` persistence and design token injection
+- **useRealTimeData** — SSE hook with exponential backoff reconnect, parse error isolation, and clean unmount
+- **useExport** — download in-memory data as CSV or JSON with field selection and custom headers
+- **Adapter layer** — pure, independently testable functions: `createEventSourceConnection`, `createReconnectStrategy`, `serializeToCsv`, `serializeToJson`, `downloadBlob`
 
-    App --> TP
-    TP --> BG
-    BG --> KPI
-    BG --> RTC
-    App --> URTD
-    URTD -->|"SSEState<T>"| App
-    App --> UE
-    KPI --> Types
-    RTC --> Types
-    URTD --> Types
-    UE --> Types
-```
+## Compatibility
 
-## Tech Stack
+| Dependency         | Tested version | Notes                              |
+|--------------------|----------------|------------------------------------|
+| React              | 18.x           | React 19 not yet verified          |
+| TypeScript         | 5.x (strict)   | Required — no plain JS builds      |
+| recharts           | ^2.12          | Peer dep via `dependencies`        |
+| react-grid-layout  | ^1.4           | Peer dep via `dependencies`        |
+| Browsers           | Modern evergreen | No SSR / no Node.js environment  |
 
-| Layer | Library |
-|---|---|
-| Framework | React 18 + TypeScript 5 (strict) |
-| Charts | recharts 2 |
-| Grid | react-grid-layout 1 |
-| State | zustand 4 (optional) |
-| Build | Vite 5 (library mode) + vite-plugin-dts |
-| Tests | Vitest 2 + React Testing Library 16 |
-
-## Install
+## Installation
 
 ```bash
-npm install @itiana/dashboard-kit recharts react-grid-layout
+npm install @itiana/dashboard-kit
 ```
 
-Peer deps: `react ^18`, `react-dom ^18`.
+react-grid-layout requires its CSS. Add both imports to your app entry:
+
+```ts
+import 'react-grid-layout/css/styles.css';
+import 'react-grid-layout/css/animate.css';
+```
 
 ## Quick Start
 
@@ -67,8 +52,8 @@ import {
 import type { Widget, WidgetLayout, KpiValue, ChartDataPoint } from '@itiana/dashboard-kit';
 
 const widgets: Widget[] = [
-  { id: 'w1', type: 'kpi', title: 'Active Users', config: {} },
-  { id: 'w2', type: 'chart', title: 'Request Rate', config: {} },
+  { id: 'w1', type: 'kpi',   title: 'Active Users',  config: {} },
+  { id: 'w2', type: 'chart', title: 'Request Rate',   config: {} },
 ];
 
 const layouts: WidgetLayout[] = [
@@ -86,7 +71,7 @@ const kpi: KpiValue = {
 
 function App() {
   const { data } = useRealTimeData<ChartDataPoint[]>({
-    url: '/api/metrics/stream',
+    url: import.meta.env.VITE_METRICS_STREAM_URL,
   });
 
   return (
@@ -100,7 +85,9 @@ function App() {
             return (
               <RealTimeChart
                 config={{
-                  series: [{ key: 'value', name: 'req/s', type: 'area' }],
+                  series: [{ key: 'value', name: 'req/s' }],
+                  mode: 'area',
+                  maxPoints: 120,
                   showGrid: true,
                 }}
                 data={data ?? []}
@@ -114,11 +101,40 @@ function App() {
 }
 ```
 
-## Components
+## Architecture
+
+```mermaid
+graph TD
+    App["Consumer App"]
+    TP["ThemeProvider\n(dark / light / system)"]
+    BG["BentoGrid\n(react-grid-layout)"]
+    KPI["KpiCard"]
+    RTC["RealTimeChart\n(recharts)"]
+    URTD["useRealTimeData\n(SSE hook)"]
+    UE["useExport\n(CSV / JSON)"]
+    Adapters["adapters/\ncreateEventSourceConnection\ncreateReconnectStrategy\nserializeToCsv\nserializeToJson\ndownloadBlob"]
+    Types["types/index.ts\n(shared contracts)"]
+
+    App --> TP
+    TP --> BG
+    BG --> KPI
+    BG --> RTC
+    App --> URTD
+    URTD -->|"SSEState&lt;T&gt;"| App
+    App --> UE
+    URTD --> Adapters
+    UE --> Adapters
+    KPI --> Types
+    RTC --> Types
+    URTD --> Types
+    UE --> Types
+```
+
+## Components API
 
 ### `ThemeProvider`
 
-Wraps the app. Supports `'light' | 'dark' | 'system'`. Persists choice to `localStorage`.
+Must wrap the component tree. Supports `'light' | 'dark' | 'system'`. Persists choice to `localStorage`.
 
 ```tsx
 <ThemeProvider defaultMode="system" storageKey="my-theme">
@@ -126,68 +142,129 @@ Wraps the app. Supports `'light' | 'dark' | 'system'`. Persists choice to `local
 </ThemeProvider>
 ```
 
-Access tokens anywhere with `useTheme()`.
+Access theme tokens and controls anywhere with `useTheme()`.
+
+| Prop          | Type                      | Default       |
+|---------------|---------------------------|---------------|
+| `defaultMode` | `'light' \| 'dark' \| 'system'` | `'system'` |
+| `storageKey`  | `string`                  | `'theme'`     |
+| `children`    | `ReactNode`               | required      |
 
 ### `BentoGrid`
 
-Draggable, resizable widget grid backed by react-grid-layout.
+Draggable, resizable widget container. **Requires react-grid-layout CSS** (see Installation).
 
-| Prop | Type | Default |
-|---|---|---|
-| `widgets` | `Widget[]` | required |
-| `layouts` | `WidgetLayout[]` | required |
-| `renderWidget` | `(w: Widget) => ReactNode` | required |
-| `cols` | `number` | `12` |
-| `rowHeight` | `number` | `80` |
-| `isDraggable` | `boolean` | `true` |
-| `isResizable` | `boolean` | `true` |
-| `onLayoutChange` | `(layouts: WidgetLayout[]) => void` | – |
+| Prop             | Type                                | Default  |
+|------------------|-------------------------------------|----------|
+| `widgets`        | `Widget[]`                          | required |
+| `layouts`        | `WidgetLayout[]`                    | required |
+| `renderWidget`   | `(w: Widget) => ReactNode`          | required |
+| `cols`           | `number`                            | `12`     |
+| `rowHeight`      | `number`                            | `80`     |
+| `isDraggable`    | `boolean`                           | `true`   |
+| `isResizable`    | `boolean`                           | `true`   |
+| `onLayoutChange` | `(layouts: WidgetLayout[]) => void` | –        |
 
 ### `KpiCard`
 
-Displays a single metric with optional trend, target progress bar, and status indicator.
+Displays a single metric with optional trend indicator, target progress bar, status color, and loading skeleton.
 
 ```tsx
 <KpiCard
-  kpi={{ label: 'CPU', value: 73.2, unit: '%', status: 'warning', trend: 'up', trendPercent: 4.1 }}
+  kpi={{
+    label: 'CPU',
+    value: 73.2,
+    unit: '%',
+    status: 'warning',
+    trend: 'up',
+    trendPercent: 4.1,
+    target: 100,
+  }}
   onClick={() => drillDown('cpu')}
 />
 ```
 
+| Prop      | Type                    | Default |
+|-----------|-------------------------|---------|
+| `kpi`     | `KpiValue`              | required |
+| `loading` | `boolean`               | `false` |
+| `onClick` | `() => void`            | –       |
+
+When `onClick` is provided, the card renders as a `<button>` element.
+
 ### `RealTimeChart`
 
-Line, area, or bar chart that accepts external data and optionally polls via `onDataRequest`.
+Renders a recharts chart that auto-trims its ring buffer to `maxPoints`.
 
 ```tsx
 <RealTimeChart
   config={{
-    series: [{ key: 'cpu', name: 'CPU %', type: 'line' }],
+    series: [{ key: 'cpu', name: 'CPU %' }],
+    mode: 'line',       // 'line' | 'area' | 'bar'
     maxPoints: 120,
     showGrid: true,
     showLegend: true,
+    yAxisDomain: [0, 100],
+    animate: false,
   }}
   data={points}
   height={240}
 />
 ```
 
-## Hooks
+| Prop            | Type                     | Default  |
+|-----------------|--------------------------|----------|
+| `config`        | `RealTimeChartConfig`    | required |
+| `data`          | `ChartDataPoint[]`       | required |
+| `height`        | `number`                 | `300`    |
+| `onDataRequest` | `() => ChartDataPoint \| null` | –  |
+| `className`     | `string`                 | –        |
 
-### `useRealTimeData<T>(options)`
+`config.mode` overrides per-series `type`. When `mode` is omitted, the chart type is auto-detected from the series array.
 
-SSE connection with unlimited auto-reconnect and exponential backoff.
+## Hooks API
+
+### `useRealTimeData<T>(options): SSEState<T>`
+
+Opens an SSE connection and manages reconnect with exponential backoff + jitter. Closes cleanly on unmount.
 
 ```ts
 const { data, isConnected, error, reconnectCount } =
-  useRealTimeData<MetricPayload>({ url: '/api/stream' });
+  useRealTimeData<MetricPayload>({
+    url: import.meta.env.VITE_STREAM_URL,
+    maxReconnectAttempts: 10,
+    reconnectInterval: 1000,
+    parseMessage: (raw) => JSON.parse(raw) as MetricPayload,
+  });
 ```
 
-### `useExport()`
+SSE option contract (`SSEOptions<T>`):
 
-Download in-memory data as CSV or JSON.
+| Field                  | Type                        | Default |
+|------------------------|-----------------------------|---------|
+| `url`                  | `string`                    | required |
+| `withCredentials`      | `boolean`                   | `false` |
+| `reconnectInterval`    | `number` (ms)               | `1000`  |
+| `maxReconnectAttempts` | `number`                    | `10`    |
+| `parseMessage`         | `(raw: string) => T`        | `JSON.parse` |
+| `onOpen`               | `() => void`                | –       |
+| `onError`              | `(e: Event) => void`        | –       |
+
+`error` is typed as `RealtimeError`:
 
 ```ts
-const { exportData, isExporting } = useExport();
+type RealtimeError =
+  | { type: 'transport'; message: string }
+  | { type: 'parse';     message: string; rawData?: string }
+  | { type: 'configuration'; message: string };
+```
+
+### `useExport(): UseExportReturn`
+
+Downloads in-memory typed data as CSV or JSON.
+
+```ts
+const { exportData, isExporting, error } = useExport();
 
 await exportData({
   data: rows,
@@ -198,15 +275,55 @@ await exportData({
 });
 ```
 
-## Scripts
+`ExportOptions<T>` contract:
+
+| Field      | Type                              | Default    |
+|------------|-----------------------------------|------------|
+| `data`     | `T[]`                             | required   |
+| `filename` | `string`                          | `'export'` |
+| `format`   | `'csv' \| 'json'`                 | `'csv'`    |
+| `fields`   | `(keyof T)[]`                     | all keys   |
+| `headers`  | `Partial<Record<keyof T, string>>` | field names |
+
+## SSR / Next.js Notes
+
+This library is **browser-only**. It uses `EventSource`, `document`, `URL.createObjectURL`, and `localStorage`. Do not render any component or call any hook during server-side rendering. Use dynamic imports with `ssr: false` in Next.js:
+
+```ts
+const BentoGrid = dynamic(() => import('@itiana/dashboard-kit').then(m => m.BentoGrid), {
+  ssr: false,
+});
+```
+
+## Accessibility
+
+- `KpiCard` renders as a `<button>` with `type="button"` when `onClick` is provided, enabling keyboard activation.
+- Progress bars use `role="progressbar"` with `aria-valuenow`, `aria-valuemin`, and `aria-valuemax`.
+- Loading skeletons set `aria-busy="true"` on the container.
+- Theme tokens expose sufficient contrast ratios for dark and light modes.
+
+## Known Constraints
+
+- React 19 compatibility is not verified — use React 18.
+- No SSR / no Node.js environment support.
+- `useRealTimeData` reconnects up to `maxReconnectAttempts` times; after exhaustion it stops retrying and leaves `error` set.
+- `BentoGrid` requires react-grid-layout CSS to be imported manually in the consumer app.
+- The library has no built-in virtualization; very large widget counts (>50) may affect grid performance.
+
+## Development
 
 ```bash
-npm install        # install deps
-npm run typecheck  # tsc --noEmit
-npm test           # vitest run (all tests)
+npm install        # install all deps including devDependencies
+npm run typecheck  # tsc --noEmit — must pass before committing
+npm test           # vitest run — all unit tests
 npm run build      # vite library build → dist/
+npm run lint       # eslint src __tests__
 ```
+
+## Release Status
+
+Current version: **0.1.0-alpha**. Public API may change before 1.0.
 
 ## License
 
-CC BY-NC 4.0 License. Copyright (c) 2026 itiana.
+[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) — free for non-commercial use with attribution. Copyright (c) 2026 itiana.

@@ -1,5 +1,8 @@
 import {useCallback, useState} from 'react';
 import type {ExportFormat, ExportOptions} from '../types';
+import {serializeToCsv} from '../adapters/serializeToCsv.js';
+import {serializeToJson} from '../adapters/serializeToJson.js';
+import {downloadBlob} from '../adapters/downloadBlob.js';
 
 interface ExportState {
     isExporting: boolean;
@@ -12,49 +15,6 @@ interface UseExportReturn {
     ) => Promise<void>;
     isExporting: boolean;
     error: string | null;
-}
-
-function toCSV<T extends Record<string, unknown>>(
-    data: T[],
-    fields?: (keyof T)[],
-    headers?: Partial<Record<keyof T, string>>
-): string {
-    if (data.length === 0) return '';
-
-    const keys: (keyof T)[] = fields ?? (Object.keys(data[0]) as (keyof T)[]);
-
-    const headerRow = keys
-        .map((k) => {
-            const label = headers?.[k] ?? String(k);
-            return `"${String(label).replace(/"/g, '""')}"`;
-        })
-        .join(',');
-
-    const rows = data.map((row) =>
-        keys
-            .map((k) => {
-                const val = row[k];
-                if (val === null || val === undefined) return '';
-                const str = String(val);
-                return `"${str.replace(/"/g, '""')}"`;
-            })
-            .join(',')
-    );
-
-    return [headerRow, ...rows].join('\n');
-}
-
-function triggerDownload(content: string, filename: string, mimeType: string): void {
-    const blob = new Blob([content], {type: mimeType});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
 }
 
 function buildFilename(base: string, format: ExportFormat): string {
@@ -86,30 +46,15 @@ export function useExport(): UseExportReturn {
             setState({isExporting: true, error: null});
 
             try {
-                await Promise.resolve();
-
                 if (format === 'json') {
-                    const subset =
-                        fields && fields.length > 0
-                            ? data.map((row) =>
-                                Object.fromEntries(
-                                    fields.map((k) => [k, row[k]])
-                                ) as Record<string, unknown>
-                            )
-                            : data;
-                    const content = JSON.stringify(subset, null, 2);
-                    triggerDownload(
-                        content,
-                        buildFilename(filename, 'json'),
-                        'application/json'
-                    );
+                    const content = serializeToJson(data, fields);
+                    downloadBlob(content, buildFilename(filename, 'json'), 'application/json');
                 } else {
-                    const csv = toCSV(data, fields, headers);
-                    triggerDownload(
-                        csv,
-                        buildFilename(filename, 'csv'),
-                        'text/csv;charset=utf-8;'
-                    );
+                    const csvOptions: import('../adapters/serializeToCsv.js').CsvOptions<T> = {};
+                    if (fields !== undefined) csvOptions.fields = fields;
+                    if (headers !== undefined) csvOptions.headers = headers;
+                    const content = serializeToCsv(data, csvOptions);
+                    downloadBlob(content, buildFilename(filename, 'csv'), 'text/csv;charset=utf-8;');
                 }
 
                 setState({isExporting: false, error: null});

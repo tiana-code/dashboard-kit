@@ -1,10 +1,4 @@
-export type WidgetType =
-    | 'kpi'
-    | 'chart'
-    | 'table'
-    | 'text'
-    | 'gauge'
-    | 'heatmap';
+export type WidgetType = 'kpi' | 'chart';
 
 export interface WidgetLayout {
     i: string;
@@ -73,6 +67,7 @@ export interface RealTimeChartConfig {
     showGrid?: boolean;
     showLegend?: boolean;
     animate?: boolean;
+    mode?: 'line' | 'area' | 'bar';
 }
 
 export type ThemeMode = 'light' | 'dark' | 'system';
@@ -92,19 +87,26 @@ export interface ThemeTokens {
     chartPalette: string[];
 }
 
-export interface SSEOptions {
+export type RealtimeError =
+    | { type: 'transport'; message: string }
+    | { type: 'parse'; message: string; rawData?: string }
+    | { type: 'configuration'; message: string };
+
+export interface SSEOptions<T = unknown> {
     url: string;
     withCredentials?: boolean;
     reconnectInterval?: number;
+    /** Default: 10 */
     maxReconnectAttempts?: number;
     onOpen?: () => void;
     onError?: (error: Event) => void;
+    parseMessage?: (raw: string) => T;
 }
 
 export interface SSEState<T> {
     data: T | null;
     isConnected: boolean;
-    error: string | null;
+    error: RealtimeError | null;
     reconnectCount: number;
 }
 

@@ -42,18 +42,15 @@ function toGridLayout(layouts: WidgetLayout[]): Layout[] {
 }
 
 function fromGridLayout(layouts: Layout[]): WidgetLayout[] {
-    return layouts.map((l) => ({
-        i: l.i,
-        x: l.x,
-        y: l.y,
-        w: l.w,
-        h: l.h,
-        minW: l.minW,
-        minH: l.minH,
-        maxW: l.maxW,
-        maxH: l.maxH,
-        static: l.static,
-    }));
+    return layouts.map((l) => {
+        const result: WidgetLayout = {i: l.i, x: l.x, y: l.y, w: l.w, h: l.h};
+        if (l.minW !== undefined) result.minW = l.minW;
+        if (l.minH !== undefined) result.minH = l.minH;
+        if (l.maxW !== undefined) result.maxW = l.maxW;
+        if (l.maxH !== undefined) result.maxH = l.maxH;
+        if (l.static !== undefined) result.static = l.static;
+        return result;
+    });
 }
 
 export function WidgetShell({
