@@ -44,7 +44,20 @@ function formatTimestamp(ts: number): string {
 }
 
 function resolveColor(series: ChartSeries, index: number, palette: string[]): string {
-    return series.color ?? palette[index % palette.length] ?? DEFAULT_COLORS[index % DEFAULT_COLORS.length];
+    const paletteColor = palette[index % palette.length];
+    const fallback = DEFAULT_COLORS[index % DEFAULT_COLORS.length];
+    return series.color ?? paletteColor ?? fallback ?? '#58a6ff';
+}
+
+function applyMaxPoints(data: ChartDataPoint[], maxPoints: number): ChartDataPoint[] {
+    return data.length > maxPoints ? data.slice(-maxPoints) : data;
+}
+
+function autoDetectChartType(series: ChartSeries[]): 'line' | 'area' | 'bar' {
+    const types = series.map((s) => s.type ?? 'line');
+    if (types.every((t) => t === 'bar')) return 'bar';
+    if (types.every((t) => t === 'area')) return 'area';
+    return 'line';
 }
 
 export function RealTimeChart({
@@ -59,11 +72,11 @@ export function RealTimeChart({
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const [liveData, setLiveData] = useState<ChartDataPoint[]>(() =>
-        data.slice(-maxPoints)
+        applyMaxPoints(data, maxPoints)
     );
 
     useEffect(() => {
-        setLiveData(data.slice(-maxPoints));
+        setLiveData(applyMaxPoints(data, maxPoints));
     }, [data, maxPoints]);
 
     useEffect(() => {
@@ -73,7 +86,7 @@ export function RealTimeChart({
             if (!point) return;
             setLiveData((prev) => {
                 const next = [...prev, point];
-                return next.length > maxPoints ? next.slice(-maxPoints) : next;
+                return applyMaxPoints(next, maxPoints);
             });
         }, config.refreshInterval);
         return () => {
@@ -102,11 +115,9 @@ export function RealTimeChart({
     );
 
     const chartType = useMemo(() => {
-        const types = config.series.map((s) => s.type ?? 'line');
-        if (types.every((t) => t === 'bar')) return 'bar';
-        if (types.every((t) => t === 'area')) return 'area';
-        return 'line';
-    }, [config.series]);
+        if (config.mode) return config.mode;
+        return autoDetectChartType(config.series);
+    }, [config.mode, config.series]);
 
     const renderLines = useCallback(
         (series: ChartSeries[]) =>

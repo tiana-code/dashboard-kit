@@ -112,7 +112,7 @@ describe('useExport', () => {
         });
 
         expect(blobs.length).toBe(1);
-        const text = await readBlob(blobs[0]);
+        const text = await readBlob(blobs[0]!);
         expect(text).toContain('"name"');
         expect(text).toContain('"value"');
         expect(text).not.toContain('"id"');
@@ -134,7 +134,7 @@ describe('useExport', () => {
             });
         });
 
-        const text = await readBlob(blobs[0]);
+        const text = await readBlob(blobs[0]!);
         expect(text).toContain('"Gamma ""quoted"""');
     });
 
@@ -155,7 +155,7 @@ describe('useExport', () => {
             });
         });
 
-        const text = await readBlob(blobs[0]);
+        const text = await readBlob(blobs[0]!);
         expect(text).toContain('"Identifier"');
         expect(text).toContain('"Full Name"');
     });
@@ -176,7 +176,7 @@ describe('useExport', () => {
             });
         });
 
-        const text = await readBlob(blobs[0]);
+        const text = await readBlob(blobs[0]!);
         const parsed = JSON.parse(text) as Array<Record<string, unknown>>;
         expect(parsed[0]).toHaveProperty('id');
         expect(parsed[0]).not.toHaveProperty('name');
