@@ -326,4 +326,4 @@ Current version: **0.1.0-alpha**. Public API may change before 1.0.
 
 ## License
 
-[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) — free for non-commercial use with attribution. Copyright (c) 2026 itiana.
+MIT — see [LICENSE](./LICENSE)
