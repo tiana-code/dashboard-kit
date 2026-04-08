@@ -65,7 +65,7 @@
     "analytics"
   ],
   "author": "itiana",
-  "license": "CC-BY-NC-4.0",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/tiana-code/dashboard-kit.git"

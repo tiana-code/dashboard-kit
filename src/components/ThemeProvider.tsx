@@ -105,12 +105,12 @@ export function ThemeProvider({
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
-        const mq = window.matchMedia('(prefers-color-scheme: dark)');
-        const handler = (e: MediaQueryListEvent) => {
-            setSystemPreference(e.matches ? 'dark' : 'light');
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const handler = (event: MediaQueryListEvent) => {
+            setSystemPreference(event.matches ? 'dark' : 'light');
         };
-        mq.addEventListener('change', handler);
-        return () => mq.removeEventListener('change', handler);
+        mediaQuery.addEventListener('change', handler);
+        return () => mediaQuery.removeEventListener('change', handler);
     }, []);
 
     const resolvedMode = useMemo(
@@ -124,19 +124,19 @@ export function ThemeProvider({
     );
 
     useEffect(() => {
-        const el = document.documentElement;
-        el.setAttribute('data-theme', resolvedMode);
-        el.style.setProperty('--dk-background', tokens.background);
-        el.style.setProperty('--dk-surface', tokens.surface);
-        el.style.setProperty('--dk-surface-variant', tokens.surfaceVariant);
-        el.style.setProperty('--dk-border', tokens.border);
-        el.style.setProperty('--dk-text', tokens.text);
-        el.style.setProperty('--dk-text-secondary', tokens.textSecondary);
-        el.style.setProperty('--dk-text-muted', tokens.textMuted);
-        el.style.setProperty('--dk-accent', tokens.accent);
-        el.style.setProperty('--dk-success', tokens.success);
-        el.style.setProperty('--dk-warning', tokens.warning);
-        el.style.setProperty('--dk-danger', tokens.danger);
+        const root = document.documentElement;
+        root.setAttribute('data-theme', resolvedMode);
+        root.style.setProperty('--dk-background', tokens.background);
+        root.style.setProperty('--dk-surface', tokens.surface);
+        root.style.setProperty('--dk-surface-variant', tokens.surfaceVariant);
+        root.style.setProperty('--dk-border', tokens.border);
+        root.style.setProperty('--dk-text', tokens.text);
+        root.style.setProperty('--dk-text-secondary', tokens.textSecondary);
+        root.style.setProperty('--dk-text-muted', tokens.textMuted);
+        root.style.setProperty('--dk-accent', tokens.accent);
+        root.style.setProperty('--dk-success', tokens.success);
+        root.style.setProperty('--dk-warning', tokens.warning);
+        root.style.setProperty('--dk-danger', tokens.danger);
     }, [resolvedMode, tokens]);
 
     const setMode = useCallback(

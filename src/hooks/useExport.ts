@@ -18,11 +18,11 @@ interface UseExportReturn {
 }
 
 function buildFilename(base: string, format: ExportFormat): string {
-    const ts = new Date()
+    const timestamp = new Date()
         .toISOString()
         .replace(/[:.]/g, '-')
         .slice(0, 19);
-    return `${base}-${ts}.${format}`;
+    return `${base}-${timestamp}.${format}`;
 }
 
 export function useExport(): UseExportReturn {
