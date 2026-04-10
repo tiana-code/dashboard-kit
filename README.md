@@ -1,6 +1,6 @@
 # @itiana/dashboard-kit
 
-Real-time dashboard component library for React. Provides a drag-and-drop BentoGrid, KPI cards with trend indicators, streaming charts via SSE, a dark/light theme system, and CSV/JSON export — with zero required configuration.
+Real-time dashboard component library for React. Provides a drag-and-drop BentoGrid, KPI cards with trend indicators, streaming charts via SSE, a dark/light theme system, and CSV/JSON export - with zero required configuration.
 
 ## What Problem It Solves
 
@@ -8,20 +8,20 @@ Building a production real-time dashboard involves wiring together a streaming d
 
 ## Features
 
-- **BentoGrid** — draggable, resizable widget grid backed by react-grid-layout
-- **KpiCard** — metric display with trend arrows, target progress bar, status color, and loading skeleton
-- **RealTimeChart** — line / area / bar chart (recharts) with auto-trimming ring buffer and configurable mode
-- **ThemeProvider** — dark / light / system theme with `localStorage` persistence and design token injection
-- **useRealTimeData** — SSE hook with exponential backoff reconnect, parse error isolation, and clean unmount
-- **useExport** — download in-memory data as CSV or JSON with field selection and custom headers
-- **Adapter layer** — pure, independently testable functions: `createEventSourceConnection`, `createReconnectStrategy`, `serializeToCsv`, `serializeToJson`, `downloadBlob`
+- **BentoGrid** - draggable, resizable widget grid backed by react-grid-layout
+- **KpiCard** - metric display with trend arrows, target progress bar, status color, and loading skeleton
+- **RealTimeChart** - line / area / bar chart (recharts) with auto-trimming ring buffer and configurable mode
+- **ThemeProvider** - dark / light / system theme with `localStorage` persistence and design token injection
+- **useRealTimeData** - SSE hook with exponential backoff reconnect, parse error isolation, and clean unmount
+- **useExport** - download in-memory data as CSV or JSON with field selection and custom headers
+- **Adapter layer** - pure, independently testable functions: `createEventSourceConnection`, `createReconnectStrategy`, `serializeToCsv`, `serializeToJson`, `downloadBlob`
 
 ## Compatibility
 
 | Dependency         | Tested version | Notes                              |
 |--------------------|----------------|------------------------------------|
 | React              | 18.x           | React 19 not yet verified          |
-| TypeScript         | 5.x (strict)   | Required — no plain JS builds      |
+| TypeScript         | 5.x (strict)   | Required - no plain JS builds      |
 | recharts           | ^2.12          | Peer dep via `dependencies`        |
 | react-grid-layout  | ^1.4           | Peer dep via `dependencies`        |
 | Browsers           | Modern evergreen | No SSR / no Node.js environment  |
@@ -304,7 +304,7 @@ const BentoGrid = dynamic(() => import('@itiana/dashboard-kit').then(m => m.Bent
 
 ## Known Constraints
 
-- React 19 compatibility is not verified — use React 18.
+- React 19 compatibility is not verified - use React 18.
 - No SSR / no Node.js environment support.
 - `useRealTimeData` reconnects up to `maxReconnectAttempts` times; after exhaustion it stops retrying and leaves `error` set.
 - `BentoGrid` requires react-grid-layout CSS to be imported manually in the consumer app.
@@ -314,8 +314,8 @@ const BentoGrid = dynamic(() => import('@itiana/dashboard-kit').then(m => m.Bent
 
 ```bash
 npm install        # install all deps including devDependencies
-npm run typecheck  # tsc --noEmit — must pass before committing
-npm test           # vitest run — all unit tests
+npm run typecheck  # tsc --noEmit - must pass before committing
+npm test           # vitest run - all unit tests
 npm run build      # vite library build → dist/
 npm run lint       # eslint src __tests__
 ```
@@ -326,4 +326,4 @@ Current version: **0.1.0-alpha**. Public API may change before 1.0.
 
 ## License
 
-MIT — see [LICENSE](./LICENSE)
+MIT - see [LICENSE](./LICENSE)
