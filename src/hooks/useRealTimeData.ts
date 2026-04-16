@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import type {SSEOptions, SSEState} from '../types';
 import {createEventSourceConnection} from '../adapters/createEventSourceConnection.js';
 import {createReconnectStrategy} from '../adapters/createReconnectStrategy.js';
@@ -29,10 +29,13 @@ export function useRealTimeData<T>(options: SSEOptions<T>): SSEState<T> {
     const reconnectCountRef = useRef(0);
     const mountedRef = useRef(true);
 
-    const strategy = createReconnectStrategy({
-        baseIntervalMs: reconnectInterval,
-        maxAttempts: maxReconnectAttempts,
-    });
+    const strategy = useMemo(
+        () => createReconnectStrategy({
+            baseIntervalMs: reconnectInterval,
+            maxAttempts: maxReconnectAttempts,
+        }),
+        [reconnectInterval, maxReconnectAttempts],
+    );
 
     const clearReconnectTimer = useCallback(() => {
         if (reconnectTimerRef.current) {
