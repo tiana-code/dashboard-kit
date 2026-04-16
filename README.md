@@ -101,35 +101,6 @@ function App() {
 }
 ```
 
-## Architecture
-
-```mermaid
-graph TD
-    App["Consumer App"]
-    TP["ThemeProvider\n(dark / light / system)"]
-    BG["BentoGrid\n(react-grid-layout)"]
-    KPI["KpiCard"]
-    RTC["RealTimeChart\n(recharts)"]
-    URTD["useRealTimeData\n(SSE hook)"]
-    UE["useExport\n(CSV / JSON)"]
-    Adapters["adapters/\ncreateEventSourceConnection\ncreateReconnectStrategy\nserializeToCsv\nserializeToJson\ndownloadBlob"]
-    Types["types/index.ts\n(shared contracts)"]
-
-    App --> TP
-    TP --> BG
-    BG --> KPI
-    BG --> RTC
-    App --> URTD
-    URTD -->|"SSEState&lt;T&gt;"| App
-    App --> UE
-    URTD --> Adapters
-    UE --> Adapters
-    KPI --> Types
-    RTC --> Types
-    URTD --> Types
-    UE --> Types
-```
-
 ## Components API
 
 ### `ThemeProvider`
